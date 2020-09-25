@@ -13,7 +13,7 @@ MKDIRFLAGS=-p
 DBG=valgrind
 DBGFLAGS=--leak-check=full --track-origins=yes --show-leak-kinds=all -v
 
-OBJ=main.o
+OBJ=main.o network.o
 
 DEBUGOBJ=$(patsubst %.o,bin/debug/%.o,$(OBJ))
 RELEASEOBJ=$(patsubst %.o,bin/release/%.o,$(OBJ))
