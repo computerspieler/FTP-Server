@@ -26,7 +26,7 @@ Address network_convert_string_to_address(const char* address_str)
 
 int network_compare_address(Address address1, Address address2)
 {
-	return address1.sin_addr.s_addr != address2.sin_addr.s_addr;
+	return address1.sin_addr.s_addr == address2.sin_addr.s_addr;
 }
 
 int network_open(Socket* sock, int set_to_non_blocking, int port)

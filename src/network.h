@@ -3,8 +3,6 @@
 
 #include <arpa/inet.h>
 
-#define COMMAND_BUFFER_SIZE 4096
-
 typedef struct sockaddr_in Address;
 typedef struct Socket Socket;
 

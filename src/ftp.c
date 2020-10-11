@@ -3,23 +3,22 @@
 #include <string.h>
 
 #include "ftp.h"
-#include "globals.h"
 #include "network.h"
 
-int ftp_new_connection_handler()
+int ftp_new_connection_handler(Socket* client)
 {
 	printf("New connection\n");
-	ftp_send_response(220, "Server", -1);
+	ftp_send_response(client, 220, "Server", -1);
 	return 0;
 }
 
-int ftp_packet_handler(char* message)
+int ftp_packet_handler(Socket* client, char* message)
 {
 	if(!strncmp(message, "USER", 4))
-		ftp_send_response(230, "User logged in", -1);
+		ftp_send_response(client, 230, "User logged in", -1);
 
 	else if(!strncmp(message, "SYST", 4))
-		ftp_send_response(215, "UNIX Type: L8", -1);
+		ftp_send_response(client, 215, "UNIX Type: L8", -1);
 
 	else if(!strncmp(message, "QUIT", 4))
 		return -1;
@@ -30,7 +29,7 @@ int ftp_packet_handler(char* message)
 	return 0;
 }
 
-int ftp_send_response(int reply_code, char* string, int string_size)
+int ftp_send_response(Socket* client, int reply_code, char* string, int string_size)
 {
 	int return_code;
 	char* reply;
@@ -50,7 +49,7 @@ int ftp_send_response(int reply_code, char* string, int string_size)
 	else
 		sprintf(reply, "%d\r\n", reply_code);
 
-	return_code = network_send(m_client, reply, reply_size);
+	return_code = network_send(*client, reply, reply_size);
 	free(reply);
 
 	return return_code;
