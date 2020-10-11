@@ -15,16 +15,17 @@ int ftp_new_connection_handler()
 
 int ftp_packet_handler(char* message)
 {
-	printf("New packet:\n%s\n----\n", message);
-
 	if(!strncmp(message, "USER", 4))
 		ftp_send_response(230, "User logged in", -1);
 
 	else if(!strncmp(message, "SYST", 4))
 		ftp_send_response(215, "UNIX Type: L8", -1);
-	
+
 	else if(!strncmp(message, "QUIT", 4))
 		return -1;
+
+	else
+		printf("New packet:\n%s\n----\n", message);
 
 	return 0;
 }

@@ -3,6 +3,6 @@
 
 #include "network.h"
 
-extern Client m_client;
+extern Socket m_client;
 
 #endif

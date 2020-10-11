@@ -8,154 +8,120 @@
 #include <unistd.h>
 
 #include "ftp.h"
-#include "globals.h"
 #include "network.h"
 #include "typedef.h"
 
-Client m_client;
-static struct sockaddr_in m_client_ip_address;
-
-static int m_socket_command;
-static int m_socket_data;
-
-static struct sockaddr_in m_socket_command_address;
-static struct sockaddr_in m_socket_data_address;
-
-int network_init(const char* client_address)
+int network_init()
 {
-	if(!inet_aton(client_address, &m_client_ip_address.sin_addr))
-	{
-		perror("inet_aton");
-		return -1;
-	}
-
-	m_socket_command = socket_open(&m_socket_command_address, 21, FALSE);
-	perror("Command socket");
-
-	return (m_socket_command < 0);
+	return 0;
 }
 
-int socket_open(struct sockaddr_in *server_address, int port, int set_to_non_blocking)
+Address network_convert_string_to_address(const char* address_str)
+{
+	Address output;
+	inet_aton(address_str, &output.sin_addr);
+
+	return output;
+}
+
+int network_compare_address(Address address1, Address address2)
+{
+	return address1.sin_addr.s_addr != address2.sin_addr.s_addr;
+}
+
+int network_open(Socket* sock, int set_to_non_blocking, int port)
 {
 	int flags;
-	int socket_out;
 
-	socket_out = socket(AF_INET, SOCK_STREAM, 0);
-	if(socket_out == -1)
+	sock->socket = socket(AF_INET, SOCK_STREAM, 0);
+	if(sock->socket == -1)
 		return -1;
 
-	server_address->sin_family = AF_INET;
-	server_address->sin_addr.s_addr = INADDR_ANY;
-	server_address->sin_port = htons(port);
-	if(bind(socket_out, (struct sockaddr*) server_address, sizeof(struct sockaddr_in)) < 0)
+	sock->address.sin_family = AF_INET;
+	sock->address.sin_addr.s_addr = INADDR_ANY;
+	sock->address.sin_port = htons(port);
+	if(bind(sock->socket, (struct sockaddr*) &sock->address, sizeof(struct sockaddr_in)) < 0)
 	{
-		close(socket_out);
+		network_close(sock);
 		return -2;
 	}
 
 	if(!set_to_non_blocking)
-		return socket_out;
+		return 0;
 
-	flags = fcntl(socket_out, F_GETFL, 0);
+	flags = fcntl(sock->socket, F_GETFL, 0);
 	if(flags == -1)
 	{
-		close(socket_out);
+		network_close(sock);
 		return -3;
 	}
 
-	if(fcntl(socket_out, F_SETFL, flags | O_NONBLOCK))
+	if(fcntl(sock->socket, F_SETFL, flags | O_NONBLOCK))
 	{
-		close(socket_out);
+		network_close(sock);
 		return -4;
 	}
 
-	return socket_out;
+	return 0;
 }
 
-void network_run()
+Socket network_wait_for_client(Socket* sock)
 {
-	Client client;
+	Socket new_client;
 
-	listen(m_socket_command, 3);
-	while(TRUE)
+	printf("Waiting for clients\n");
+	new_client.size = sizeof(struct sockaddr_in);
+	new_client.socket = accept(sock->socket, (struct sockaddr*) &new_client.address, (socklen_t*) &new_client.size);
+	if(new_client.socket < 0)
 	{
-		printf("Waiting for clients\n");
-		client.address_size = sizeof(struct sockaddr_in);
-		client.socket = accept(m_socket_command, (struct sockaddr*) &client.address, (socklen_t*) &client.address_size);
-		if(client.socket < 0)
-		{
-			perror("accept");
-			return;
-		}
-
-		if(client.address.sin_addr.s_addr != m_client_ip_address.sin_addr.s_addr)
-		{
-			printf("Wrong client: %s\n", inet_ntoa(m_client_ip_address.sin_addr));
-			close(client.socket);
-			continue;
-		}
-
-		network_new_connection(client);
-		printf("The client disconnected\n");
+		perror("accept");
+		return new_client;
 	}
+
+	return new_client;
 }
 
-void network_exit()
+int network_send(Socket sock, char* buffer, int buffer_size)
 {
-	close(m_socket_command);
+	return send(sock.socket, buffer, buffer_size, 0);
 }
 
-int network_send(Client client, char* buffer, int buffer_size)
+int network_receive(Socket sock, char* buffer, int buffer_size)
 {
-	return send(client.socket, buffer, buffer_size, 0);
+	return recv(sock.socket, buffer, buffer_size, 0);
 }
 
-int network_receive(Client client, char* buffer, int buffer_size)
-{
-	return recv(client.socket, buffer, buffer_size, 0);
-}
-
-void network_new_connection(Client client)
+int network_open_in_range(Socket* sock, int set_to_non_blocking, int port_begin, int port_end)
 {
 	int port;
-	int read_size;
-	int return_code;
-	char message[COMMAND_BUFFER_SIZE];
-
-	m_client = client;
-	m_socket_data = 0;
-
-	// It will look for an available port
-	for(port = 1024; m_socket_data == 0; port ++)
+	for(port = port_begin; sock->socket == 0; port ++)
 	{
-		if(port >= 65635)
+		if(port >= port_end)
 		{
-			printf("No available port between 1024 and 65635\n");
-			return;
+			printf("No available port between %i and %i\n", port_begin, port_end);
+			return -1;
 		}
 
-		m_socket_data = socket_open(&m_socket_data_address, 20, TRUE);
-		
-		if(m_socket_data == -2 && errno == EADDRINUSE)
+		if(!network_open(sock, set_to_non_blocking, port))
+			break;
+
+		if(sock->socket == -2 && errno == EADDRINUSE)
 			continue;
 
-		if(m_socket_data > 0 && errno == 0)
-			break;
-
 		perror("Data socket");
-		return;
+		return -1;
 	}
 
-	ftp_new_connection_handler();
-	while((read_size = network_receive(client, message, COMMAND_BUFFER_SIZE)) > 0)
-	{
-		return_code = ftp_packet_handler(message);
-		if(return_code < 0)
-			break;
-	}
-	
-	if(read_size == -1)
-		perror("recv");
+	return 0;
+}
 
-	close(m_socket_data);
+void network_close(Socket* sock)
+{
+	close(sock->socket);
+}
+
+
+void network_listen(Socket* sock)
+{
+	listen(sock->socket, 3);
 }
