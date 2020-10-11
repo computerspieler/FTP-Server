@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "ftp.h"
-#include "network.h"
+#include "ftp_commands.h"
 
 int ftp_new_connection_handler(Socket* client)
 {
@@ -14,26 +14,31 @@ int ftp_new_connection_handler(Socket* client)
 
 int ftp_packet_handler(Socket* client, char* message)
 {
-	if(!strncmp(message, "USER", 4))
-		ftp_send_response(client, 230, "User logged in", -1);
+	int i;
+	CommandHandler handler = NULL;
+	 i = NB_COMMANDS;
+	for(i = 0; i < NB_COMMANDS; i++)
+	{
+		if(!strncmp(message, commands[i].name, commands[i].name_size))
+		{
+			handler = commands[i].handler;
+			break;
+		}
+	}
 
-	else if(!strncmp(message, "SYST", 4))
-		ftp_send_response(client, 215, "UNIX Type: L8", -1);
-
-	else if(!strncmp(message, "QUIT", 4))
-		return -1;
-
+	if(handler)
+		handler(client, message);
 	else
-		printf("New packet:\n%s\n----\n", message);
+		printf("Packet with an unknown command:\n%s\n----\n", message);
 
 	return 0;
 }
 
 int ftp_send_response(Socket* client, int reply_code, char* string, int string_size)
 {
-	int return_code;
 	char* reply;
 	int reply_size;
+	int return_code;
 
 	if(string == NULL)
 		string_size = 0;

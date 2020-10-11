@@ -21,12 +21,12 @@ int network_compare_address(Address, Address);
 int network_open(Socket*, int, int);
 int network_open_in_range(Socket*, int, int, int);
 
-void network_close(Socket*);
-
 int network_send(Socket, char*, int);
 int network_receive(Socket, char*, int);
 
-Socket network_wait_for_client(Socket*);
+void network_close(Socket*);
+
 void network_listen(Socket*);
+Socket network_wait_for_client(Socket*);
 
 #endif
