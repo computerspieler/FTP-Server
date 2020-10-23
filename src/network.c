@@ -19,6 +19,7 @@ int network_init()
 Address network_convert_string_to_address(const char* address_str)
 {
 	Address output;
+	output.sin_family = AF_INET;
 	inet_aton(address_str, &output.sin_addr);
 
 	return output;
@@ -29,10 +30,16 @@ int network_compare_address(Address address1, Address address2)
 	return address1.sin_addr.s_addr == address2.sin_addr.s_addr;
 }
 
-int network_open(Socket* sock, int set_to_non_blocking, int port)
-{
-	int flags;
 
+void network_set_address_port(Address* address, int port)
+{
+	if(address != NULL)
+		address->sin_port = htons(port);
+}
+
+int network_open(Socket* sock, int port)
+{
+	sock->port = port;
 	sock->socket = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock->socket == -1)
 		return -1;
@@ -44,22 +51,6 @@ int network_open(Socket* sock, int set_to_non_blocking, int port)
 	{
 		network_close(sock);
 		return -2;
-	}
-
-	if(!set_to_non_blocking)
-		return 0;
-
-	flags = fcntl(sock->socket, F_GETFL, 0);
-	if(flags == -1)
-	{
-		network_close(sock);
-		return -3;
-	}
-
-	if(fcntl(sock->socket, F_SETFL, flags | O_NONBLOCK))
-	{
-		network_close(sock);
-		return -4;
 	}
 
 	return 0;
@@ -91,7 +82,7 @@ int network_receive(Socket sock, char* buffer, int buffer_size)
 	return recv(sock.socket, buffer, buffer_size, 0);
 }
 
-int network_open_in_range(Socket* sock, int set_to_non_blocking, int port_begin, int port_end)
+int network_open_in_range(Socket* sock, int port_begin, int port_end)
 {
 	int port;
 	for(port = port_begin; sock->socket == 0; port ++)
@@ -102,7 +93,7 @@ int network_open_in_range(Socket* sock, int set_to_non_blocking, int port_begin,
 			return -1;
 		}
 
-		if(!network_open(sock, set_to_non_blocking, port))
+		if(!network_open(sock, port))
 			break;
 
 		if(sock->socket == -2 && errno == EADDRINUSE)
@@ -117,11 +108,47 @@ int network_open_in_range(Socket* sock, int set_to_non_blocking, int port_begin,
 
 void network_close(Socket* sock)
 {
-	close(sock->socket);
+	if(close(sock->socket))
+		perror("close");
+	sock->socket = 0;
 }
 
 
 void network_listen(Socket* sock)
 {
 	listen(sock->socket, 3);
+}
+
+
+int network_connect(Socket* sock)
+{
+	sock->socket = socket(AF_INET, SOCK_STREAM, 0);
+	if(sock->socket == -1)
+		return -1;
+
+	if(connect(sock->socket, (struct sockaddr*) &sock->address, sizeof(struct sockaddr_in)))
+	{
+		network_close(sock);
+		return -2;
+	}
+
+	return 0;
+}
+
+int network_set_socket_to_nonblocking(Socket* sock)
+{
+	int flags = fcntl(sock->socket, F_GETFL, 0);
+	if(flags == -1)
+	{
+		network_close(sock);
+		return -3;
+	}
+
+	if(fcntl(sock->socket, F_SETFL, flags | O_NONBLOCK))
+	{
+		network_close(sock);
+		return -4;
+	}
+
+	return 0;
 }

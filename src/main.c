@@ -5,14 +5,17 @@
 #include "ftp.h"
 #include "network.h"
 #include "typedef.h"
+#include "utils.h"
 
-void new_connection(Socket client);
+static int terminate = 0;
+
+void new_connection(Socket);
 
 int main(int argc, char* argv[])
 {
 	Address accepted_address;
-	Socket socket_command;
 	Socket client;
+	Socket socket_command;
 
 	network_init();
 	accepted_address = network_convert_string_to_address("127.0.0.1");
@@ -22,15 +25,15 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if(network_open(&socket_command, FALSE, 21))
+	if(network_open(&socket_command, 21))
 	{
 		perror("command socket");
 		return -2;
 	}
 
-	network_listen(&socket_command);
-	while(TRUE)
+	while(!terminate)
 	{
+		network_listen(&socket_command);
 		client = network_wait_for_client(&socket_command);
 		if(errno)
 			break;
@@ -43,33 +46,38 @@ int main(int argc, char* argv[])
 		}
 
 		new_connection(client);
+		terminate = 1;	// For debugging purposes
 	}
 
+	printf("Stop right there, criminal scum!\n");
+	network_close(&client);
 	network_close(&socket_command);
 
 	return 0;
 }
 
-void new_connection(Socket client)
+void new_connection(Socket command_socket)
 {
 	int read_size;
-	Socket socket_data;
-	char message[COMMAND_BUFFER_SIZE];
+	Client client;
 
-	if(network_open(&socket_data, TRUE, 20))
-		if(network_open_in_range(&socket_data, TRUE, 1024, 65535))
-			return;
+	client.command = command_socket;
+	client.message = (char*) xalloc(COMMAND_BUFFER_SIZE, sizeof(char));
+	client.message_size = COMMAND_BUFFER_SIZE;
 
 	ftp_new_connection_handler(&client);
-	while((read_size = network_receive(client, message, COMMAND_BUFFER_SIZE)) > 0)
+	while((read_size = network_receive(client.command, client.message, client.message_size)) > 0 && !terminate)
 	{
-		if(ftp_packet_handler(&client, message) < 0)
+		if(ftp_packet_handler(&client) == -1)
 			break;
+
+		clear_buffer(client.message, client.message_size);
 	}
 	
 	if(read_size == -1)
 		perror("recv");
 
-	network_close(&socket_data);
+	network_close(&client.data);
+	free(client.message);
 	printf("The client is disconnected\n");
 }
