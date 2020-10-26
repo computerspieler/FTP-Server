@@ -10,8 +10,8 @@ DELFLAGS=-frdv
 MKDIR=mkdir
 MKDIRFLAGS=-p
 
-DBG=valgrind
-DBGFLAGS=--leak-check=full --track-origins=yes --show-leak-kinds=all -v
+DBG=gdb
+DBGFLAGS=
 
 OBJ=main.o network.o ftp.o ftp_commands.o utils.o
 

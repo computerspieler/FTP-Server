@@ -67,7 +67,6 @@ HANDLER(PORT)
 		ip_address_index ++;
 		argument_str += argument_str_length + 1;
 	}
-
 	address = network_convert_string_to_address(ip_address);
 
 	// Parse the port address

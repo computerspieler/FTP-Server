@@ -16,15 +16,15 @@ struct Client
 	Socket data;
 
 	char* message;
-    char* arguments;
+	char* arguments;
 	int message_size;
 };
 
 struct Command
 {
-    char* name;
-    int name_size;
-    CommandHandler handler;
+	char* name;
+	int name_size;
+	CommandHandler handler;
 };
 
 int ftp_new_connection_handler(Client*);
@@ -47,16 +47,16 @@ HANDLER(STOR);
 HANDLER(NOOP);
 
 static const Command commands[] = {
-    COMMAND(USER),
-    COMMAND(SYST),
-    COMMAND(QUIT),
-    COMMAND(PORT),
-    COMMAND(TYPE),
-    COMMAND(MODE),
-    COMMAND(STRU),
-    COMMAND(RETR),
-    COMMAND(STOR),
-    COMMAND(NOOP),
+	COMMAND(USER),
+	COMMAND(SYST),
+	COMMAND(QUIT),
+	COMMAND(PORT),
+	COMMAND(TYPE),
+	COMMAND(MODE),
+	COMMAND(STRU),
+	COMMAND(RETR),
+	COMMAND(STOR),
+	COMMAND(NOOP),
 };
 
 #define NB_COMMANDS (int)(sizeof(commands) / sizeof(Command))
