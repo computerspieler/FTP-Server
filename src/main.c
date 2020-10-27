@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "config.h"
 #include "ftp.h"
 #include "network.h"
 #include "typedef.h"
@@ -38,12 +39,14 @@ int main(int argc, char* argv[])
 		if(errno)
 			break;
 
+#ifndef ACCEPT_ALL_USERS
 		if(!network_compare_address(client.address, accepted_address))
 		{
-			printf("Bad client\n");
+			printf("Bad client (Address: %s)\n", network_convert_address_to_string(client.address));
 			network_close(&client);
 			continue;
 		}
+#endif
 
 		new_connection(client);
 		terminate = 1;	// For debugging purposes

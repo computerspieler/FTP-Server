@@ -17,6 +17,7 @@ struct Socket
 int network_init();
 
 Address network_convert_string_to_address(const char*);
+char* network_convert_address_to_string(Address);
 void network_set_address_port(Address*, int);
 
 int network_compare_address(Address, Address);

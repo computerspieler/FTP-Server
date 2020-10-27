@@ -25,6 +25,11 @@ Address network_convert_string_to_address(const char* address_str)
 	return output;
 }
 
+char* network_convert_address_to_string(Address address)
+{
+	return inet_ntoa(address.sin_addr);
+}
+
 int network_compare_address(Address address1, Address address2)
 {
 	return address1.sin_addr.s_addr == address2.sin_addr.s_addr;
