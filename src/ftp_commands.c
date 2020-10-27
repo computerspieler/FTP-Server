@@ -129,7 +129,25 @@ HANDLER(RETR)
 //path
 HANDLER(STOR)
 {
+	int i;
 	int read_size;
+	FILE* file;
+	char* file_name = client->arguments;
+
+	for(i = 0; i < client->arguments_size; i ++)
+	{
+		if(file_name[i] == '/')
+			file_name = &file_name[++i];
+	}
+
+	printf("File to download: %s\n", file_name);
+	file = fopen(file_name, "w");
+	if(!file)
+	{
+		perror("fopen");
+		ftp_send_response(client, 451, NULL, -1);
+		return 0;
+	}
 
 	ftp_send_response(client, 150, NULL, -1);
 	if(network_connect(&client->data))
@@ -142,12 +160,14 @@ HANDLER(STOR)
 	clear_buffer(client->message, client->message_size);
 	while((read_size = network_receive(client->data, client->message, client->message_size)) > 0)
 	{
+		fwrite(client->message, sizeof(char), read_size, file);
 		printf("%i: %.*s\n", read_size, client->message_size, client->message);
 	}
 
 	if(read_size == -1)
 		perror("recv");
 
+	fclose(file);
 	network_close(&client->data);
 
 	return 0;

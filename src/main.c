@@ -66,15 +66,12 @@ void new_connection(Socket command_socket)
 
 	client.command = command_socket;
 	client.message = (char*) xalloc(COMMAND_BUFFER_SIZE, sizeof(char));
-	client.message_size = COMMAND_BUFFER_SIZE;
 
 	ftp_new_connection_handler(&client);
-	while((read_size = network_receive(client.command, client.message, client.message_size)) > 0 && !terminate)
+	while((client.message_size = network_receive(client.command, client.message, COMMAND_BUFFER_SIZE)) > 0 && !terminate)
 	{
 		if(ftp_packet_handler(&client) == -1)
 			break;
-
-		clear_buffer(client.message, client.message_size);
 	}
 	
 	if(read_size == -1)

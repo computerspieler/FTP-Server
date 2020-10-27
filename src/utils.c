@@ -1,7 +1,9 @@
+#include <stdio.h>
 #include <stdlib.h>
 
-#include "utils.h"
 #include "error.h"
+#include "utils.h"
+#include "typedef.h"
 
 char to_lower(char c)
 {
@@ -125,4 +127,33 @@ void clear_buffer(char* buffer, int size)
 	int i;
 	for(i = 0; i < size; i++)
 		buffer[i] = 0;
+}
+
+void print_hex_dump(char* string, int string_size)
+{
+	int i;
+	int j;
+	int line_length = 16;
+
+	for(i = 0; i < string_size; i += 16)
+	{
+		if(i+16 > string_size)
+			line_length = string_size - i;
+
+		for(j = 0; j < line_length; j++)
+			printf("%02x ", (uchar) string[i+j]);
+
+		for(j = 0; j < line_length; j++)
+		{
+			switch(string[i+j])
+			{
+			case '\r': printf("\\r"); break;
+			case '\n': printf("\\n"); break;
+			case '\t': printf("\\t"); break;
+
+			default: printf("%c", string[i+j]);
+			}
+		}
+		printf("\n");
+	}
 }

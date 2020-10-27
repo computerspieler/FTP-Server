@@ -25,10 +25,26 @@ int ftp_packet_handler(Client* client)
 		}
 	}
 
-	printf("Packet with an unknown command:\n%s\n----\n", client->message);
+	// It will look for a <CRLF> sequence and turn it into a null character
+	for(i = client->message_size; i > 1; i--)
+	{
+		if(client->message[i] == '\n' && client->message[i-1] == '\r')
+		{
+			client->message[i]   = 0;
+			client->message[i-1] = 0;
+			client->message_size = i-1;
+			break;
+		}
+	}
+
+	printf("Packet:\n");
+	print_hex_dump(client->message, client->message_size);
+	printf("----\n");
+
 	if(handler)
 	{
 		client->arguments = client->message + commands[i].name_size;
+		client->arguments_size = client->message_size - commands[i].name_size;
 
 		// If there's a space after the command
 		// Then we skip it

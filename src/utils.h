@@ -16,4 +16,6 @@ void to_lower_string(char*, int);
 char* create_substring(char*, int);
 int string_compare(char*, char*, int);
 
+void print_hex_dump(char*, int);
+
 #endif

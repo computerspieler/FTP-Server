@@ -3,8 +3,6 @@
 
 #include "network.h"
 
-#define COMMAND_BUFFER_SIZE 4096
-
 typedef struct Client Client;
 
 typedef int(*CommandHandler)(Client*);
@@ -17,6 +15,7 @@ struct Client
 
 	char* message;
 	char* arguments;
+	int arguments_size;
 	int message_size;
 };
 
