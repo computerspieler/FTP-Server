@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stddef.h>
 
+#include "config.h"
 #include "ftp.h"
 #include "network.h"
 #include "typedef.h"
@@ -126,11 +127,10 @@ HANDLER(RETR)
 	CLIENT_UNUSED;
 	return 0;
 }
-//path
+
 HANDLER(STOR)
 {
 	int i;
-	int read_size;
 	FILE* file;
 	char* file_name = client->arguments;
 
@@ -158,13 +158,13 @@ HANDLER(STOR)
 	ftp_send_response(client, 125, NULL, -1);
 
 	clear_buffer(client->message, client->message_size);
-	while((read_size = network_receive(client->data, client->message, client->message_size)) > 0)
+	while((client->message_size = network_receive(client->data, client->message, COMMAND_BUFFER_SIZE)) > 0)
 	{
-		fwrite(client->message, sizeof(char), read_size, file);
-		printf("%i: %.*s\n", read_size, client->message_size, client->message);
+		fwrite(client->message, sizeof(char), client->message_size, file);
+		printf("%i: %.*s\n", client->message_size, COMMAND_BUFFER_SIZE, client->message);
 	}
 
-	if(read_size == -1)
+	if(client->message_size == -1)
 		perror("recv");
 
 	fclose(file);

@@ -14,16 +14,7 @@ int ftp_new_connection_handler(Client* client)
 int ftp_packet_handler(Client* client)
 {
 	int i;
-	CommandHandler handler = NULL;
-
-	for(i = 0; i < NB_COMMANDS; i++)
-	{
-		if(!strncmp(client->message, commands[i].name, commands[i].name_size))
-		{
-			handler = commands[i].handler;
-			break;
-		}
-	}
+	Command* command = NULL;
 
 	// It will look for a <CRLF> sequence and turn it into a null character
 	for(i = client->message_size; i > 1; i--)
@@ -37,21 +28,30 @@ int ftp_packet_handler(Client* client)
 		}
 	}
 
+	for(i = 0; i < NB_COMMANDS; i++)
+	{
+		if(!strncmp(client->message, commands[i].name, commands[i].name_size))
+		{
+			command = &commands[i];
+			break;
+		}
+	}
+
 	printf("Packet:\n");
 	print_hex_dump(client->message, client->message_size);
 	printf("----\n");
 
-	if(handler)
+	if(command)
 	{
-		client->arguments = client->message + commands[i].name_size;
-		client->arguments_size = client->message_size - commands[i].name_size;
+		client->arguments = client->message + command->name_size;
+		client->arguments_size = client->message_size - command->name_size;
 
 		// If there's a space after the command
 		// Then we skip it
 		if(*client->arguments == ' ')
 			client->arguments ++;
 
-		return handler(client);
+		return command->handler(client);
 	}
 
 	ftp_send_response(client, 202, NULL, -1);
