@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "config.h"
+#include "file.h"
 #include "ftp.h"
 #include "network.h"
 #include "typedef.h"
@@ -14,13 +15,19 @@ void new_connection(Socket);
 
 int main(int argc, char* argv[])
 {
-	Address accepted_address;
 	Socket client;
 	Socket socket_command;
 
+#ifndef ACCEPT_ALL_USERS
+	Address accepted_address;
+	accepted_address = network_convert_string_to_address("127.0.0.1");
+#endif
+
+	(void) argc;
+	(void) argv;
+
 	file_init();
 	network_init();
-	accepted_address = network_convert_string_to_address("127.0.0.1");
 	if(errno)
 	{
 		perror("string to address");
@@ -62,7 +69,6 @@ int main(int argc, char* argv[])
 
 void new_connection(Socket command_socket)
 {
-	int read_size;
 	Client client;
 
 	client.command = command_socket;
@@ -74,9 +80,6 @@ void new_connection(Socket command_socket)
 		if(ftp_packet_handler(&client) == -1)
 			break;
 	}
-	
-	if(read_size == -1)
-		perror("recv");
 
 	network_close(&client.data);
 	free(client.message);

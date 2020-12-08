@@ -25,7 +25,7 @@ char* file_extract_name(char* path, int path_length)
 
 int file_init()
 {
-
+	return 0;
 }
 
 int file_open_for_writing(File* file, char* name)
@@ -43,13 +43,13 @@ int file_open_for_reading(File* file, char* name)
 int file_read(File* file, char* buffer, int buffer_size)
 {
 	size_t nb_bytes_read = fread(buffer, sizeof(char), buffer_size, file->file);
-	return !(nb_bytes_read == buffer_size);
+	return !((int) nb_bytes_read == buffer_size);
 }
 
 int file_write(File* file, char* buffer, int buffer_size)
 {
 	size_t nb_bytes_written = fwrite(buffer, sizeof(char), buffer_size, file->file);
-	return !(nb_bytes_written == buffer_size);
+	return !((int) nb_bytes_written == buffer_size);
 }
 
 int file_close(File* file)

@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "ftp.h"
+#include "utils.h"
 
 int ftp_new_connection_handler(Client* client)
 {
@@ -54,7 +55,7 @@ int ftp_packet_handler(Client* client)
 		return command->handler(client);
 	}
 
-	ftp_send_response(client, 202, NULL, -1);
+	ftp_send_response(client, 500, NULL, -1);
 	return 0;
 }
 

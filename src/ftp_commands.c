@@ -8,8 +8,11 @@
 #include "typedef.h"
 #include "utils.h"
 
-#define CLIENT_UNUSED \
-	(void) client;
+#define COMMAND_UNIMPLEMENTED \
+	ftp_send_response(client, 502, NULL, -1);
+
+#define OPTION_UNIMPLEMENTED \
+	ftp_send_response(client, 504, NULL, -1);
 
 HANDLER(USER)
 {
@@ -97,11 +100,11 @@ HANDLER(TYPE)
 	switch(client->arguments[0])
 	{
 	case 'A':   // Ascii
-		ftp_send_response(client, 200, NULL, -1);
+		OPTION_UNIMPLEMENTED;
 		break;
 
 	case 'I':   // Binary
-		ftp_send_response(client, 200, NULL, -1);
+		OPTION_UNIMPLEMENTED;
 		break;
 
 	default:
@@ -110,28 +113,67 @@ HANDLER(TYPE)
 	}
 	return 0;
 }
-//mode-code
+
 HANDLER(MODE)
 {
-	ftp_send_response(client, 200, NULL, -1);
+	switch(client->arguments[0])
+	{
+	case 'S':	// Stream
+		OPTION_UNIMPLEMENTED;
+		break;
+
+	case 'B':	// Block
+		OPTION_UNIMPLEMENTED;
+		break;
+
+	case 'C':	// Compressed
+		OPTION_UNIMPLEMENTED;
+		break;
+
+	default:
+		printf("Unknown mode code: %s\n", client->arguments);
+		ftp_send_response(client, 500, NULL, -1);
+	}
 	return 0;
 }
 //structure-code
 HANDLER(STRU)
 {
-	ftp_send_response(client, 200, NULL, -1);
+	switch(client->arguments[0])
+	{
+	case 'F':	// File
+		OPTION_UNIMPLEMENTED;
+		break;
+
+	case 'R':	// Record
+		OPTION_UNIMPLEMENTED;
+		break;
+
+	case 'P':	// Page
+		OPTION_UNIMPLEMENTED;
+		break;
+
+	default:
+		printf("Unknown structure code: %s\n", client->arguments);
+		ftp_send_response(client, 500, NULL, -1);
+	}
 	return 0;
 }
 //path
 HANDLER(RETR)
 {
-	CLIENT_UNUSED;
+	COMMAND_UNIMPLEMENTED;
+	return 0;
+}
+//path
+HANDLER(LIST)
+{
+	COMMAND_UNIMPLEMENTED;
 	return 0;
 }
 
 HANDLER(STOR)
 {
-	int i;
 	File file;
 	char* file_name = file_extract_name(client->arguments, client->arguments_size);
 

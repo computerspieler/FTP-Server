@@ -44,6 +44,7 @@ HANDLER(STRU);
 HANDLER(RETR);
 HANDLER(STOR);
 HANDLER(NOOP);
+HANDLER(LIST);
 
 static const Command commands[] = {
 	COMMAND(USER),
@@ -56,6 +57,7 @@ static const Command commands[] = {
 	COMMAND(RETR),
 	COMMAND(STOR),
 	COMMAND(NOOP),
+	COMMAND(LIST),
 };
 
 #define NB_COMMANDS (int)(sizeof(commands) / sizeof(Command))
