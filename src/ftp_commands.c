@@ -2,6 +2,7 @@
 #include <stddef.h>
 
 #include "config.h"
+#include "file.h"
 #include "ftp.h"
 #include "network.h"
 #include "typedef.h"
@@ -131,18 +132,11 @@ HANDLER(RETR)
 HANDLER(STOR)
 {
 	int i;
-	FILE* file;
-	char* file_name = client->arguments;
-
-	for(i = 0; i < client->arguments_size; i ++)
-	{
-		if(file_name[i] == '/')
-			file_name = &file_name[++i];
-	}
+	File file;
+	char* file_name = file_extract_name(client->arguments, client->arguments_size);
 
 	printf("File to download: %s\n", file_name);
-	file = fopen(file_name, "w");
-	if(!file)
+	if(file_open_for_writing(&file, file_name))
 	{
 		perror("fopen");
 		ftp_send_response(client, 451, NULL, -1);
@@ -160,14 +154,14 @@ HANDLER(STOR)
 	clear_buffer(client->message, client->message_size);
 	while((client->message_size = network_receive(client->data, client->message, COMMAND_BUFFER_SIZE)) > 0)
 	{
-		fwrite(client->message, sizeof(char), client->message_size, file);
+		file_write(&file, client->message, client->message_size);
 		printf("%i: %.*s\n", client->message_size, COMMAND_BUFFER_SIZE, client->message);
 	}
 
 	if(client->message_size == -1)
 		perror("recv");
 
-	fclose(file);
+	file_close(&file);
 	network_close(&client->data);
 
 	return 0;

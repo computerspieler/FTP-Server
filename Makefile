@@ -13,7 +13,7 @@ MKDIRFLAGS=-p
 DBG=gdb
 DBGFLAGS=
 
-OBJ=main.o network.o ftp.o ftp_commands.o utils.o
+OBJ=main.o network.o file.o ftp.o ftp_commands.o utils.o
 
 DEBUGOBJ=$(patsubst %.o,bin/debug/%.o,$(OBJ))
 RELEASEOBJ=$(patsubst %.o,bin/release/%.o,$(OBJ))

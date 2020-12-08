@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
 	Socket client;
 	Socket socket_command;
 
+	file_init();
 	network_init();
 	accepted_address = network_convert_string_to_address("127.0.0.1");
 	if(errno)
