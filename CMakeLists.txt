@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project(ftp-server LANGUAGES C)
 
 set(SRC
+	src/console.c
 	src/file.c
 	src/ftp.c
 	src/ftp_commands.c

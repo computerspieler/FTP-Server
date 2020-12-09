@@ -9,4 +9,6 @@ typedef unsigned long ulong;
 #define TRUE 1
 #define FALSE 0
 
+#include <stddef.h>
+
 #endif

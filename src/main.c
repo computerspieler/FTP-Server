@@ -1,8 +1,8 @@
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "config.h"
+#include "console.h"
 #include "file.h"
 #include "ftp.h"
 #include "network.h"
@@ -21,18 +21,20 @@ int main(int argc, char* argv[])
 #ifndef ACCEPT_ALL_USERS
 	Address accepted_address;
 	accepted_address = network_convert_string_to_address("127.0.0.1");
-#endif
 
-	(void) argc;
-	(void) argv;
-
-	file_init();
-	network_init();
 	if(errno)
 	{
 		perror("string to address");
 		return -1;
 	}
+#endif
+
+	(void) argc;
+	(void) argv;
+
+	console_init();
+	file_init();
+	network_init();
 
 	if(network_open(&socket_command, 21))
 	{
@@ -50,7 +52,7 @@ int main(int argc, char* argv[])
 #ifndef ACCEPT_ALL_USERS
 		if(!network_compare_address(client.address, accepted_address))
 		{
-			printf("Bad client (Address: %s)\n", network_convert_address_to_string(client.address));
+			console_write("Bad client (Address: %s)\n", network_convert_address_to_string(client.address));
 			network_close(&client);
 			continue;
 		}
@@ -60,9 +62,10 @@ int main(int argc, char* argv[])
 		terminate = 1;	// For debugging purposes
 	}
 
-	printf("Stop right there, criminal scum!\n");
+	console_write("Stop right there, criminal scum!\n");
 	network_close(&client);
 	network_close(&socket_command);
+	console_close();
 
 	return 0;
 }
@@ -83,5 +86,5 @@ void new_connection(Socket command_socket)
 
 	network_close(&client.data);
 	free(client.message);
-	printf("The client is disconnected\n");
+	console_write("The client is disconnected\n");
 }

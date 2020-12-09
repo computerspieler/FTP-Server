@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
+#include "console.h"
 #include "ftp.h"
 #include "utils.h"
+#include "typedef.h"
 
 int ftp_new_connection_handler(Client* client)
 {
-	printf("New connection\n");
+	console_write("New connection\n");
 	ftp_send_response(client, 220, "Server", -1);
 	return 0;
 }
@@ -31,16 +32,18 @@ int ftp_packet_handler(Client* client)
 
 	for(i = 0; i < NB_COMMANDS; i++)
 	{
-		if(!strncmp(client->message, commands[i].name, commands[i].name_size))
+		if(string_compare(client->message, commands[i].name, commands[i].name_size))
 		{
 			command = &commands[i];
 			break;
 		}
 	}
 
-	printf("Packet:\n");
+	console_write("Packet:\n");
 	print_hex_dump(client->message, client->message_size);
-	printf("----\n");
+	console_write("----\n");
+	
+	console_write(commands[i].name);
 
 	if(command)
 	{
@@ -69,10 +72,10 @@ int ftp_send_response(Client* client, int reply_code, char* string, int string_s
 		string_size = 0;
 
 	if(string_size < 0)
-		string_size = strlen(string);
+		string_size = string_length(string);
 
 	reply_size = 5 + string_size + (string_size > 0);
-	reply = (char*) calloc(reply_size, sizeof(char));
+	reply = (char*) xalloc(reply_size, sizeof(char));
 
 	if(string_size > 0)
 		sprintf(reply, "%d %.*s\r\n", reply_code, string_size, string);

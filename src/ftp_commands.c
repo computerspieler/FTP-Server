@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include <stddef.h>
-
 #include "config.h"
+#include "console.h"
 #include "file.h"
 #include "ftp.h"
 #include "network.h"
@@ -108,7 +106,7 @@ HANDLER(TYPE)
 		break;
 
 	default:
-		printf("Unknown type code: %s\n", client->arguments);
+		console_write("Unknown type code: %s\n", client->arguments);
 		ftp_send_response(client, 500, NULL, -1);
 	}
 	return 0;
@@ -131,7 +129,7 @@ HANDLER(MODE)
 		break;
 
 	default:
-		printf("Unknown mode code: %s\n", client->arguments);
+		console_write("Unknown mode code: %s\n", client->arguments);
 		ftp_send_response(client, 500, NULL, -1);
 	}
 	return 0;
@@ -154,7 +152,7 @@ HANDLER(STRU)
 		break;
 
 	default:
-		printf("Unknown structure code: %s\n", client->arguments);
+		console_write("Unknown structure code: %s\n", client->arguments);
 		ftp_send_response(client, 500, NULL, -1);
 	}
 	return 0;
@@ -177,7 +175,7 @@ HANDLER(STOR)
 	File file;
 	char* file_name = file_extract_name(client->arguments, client->arguments_size);
 
-	printf("File to download: %s\n", file_name);
+	console_write("File to download: %s\n", file_name);
 	if(file_open_for_writing(&file, file_name))
 	{
 		perror("fopen");
@@ -197,7 +195,7 @@ HANDLER(STOR)
 	while((client->message_size = network_receive(client->data, client->message, COMMAND_BUFFER_SIZE)) > 0)
 	{
 		file_write(&file, client->message, client->message_size);
-		printf("%i: %.*s\n", client->message_size, COMMAND_BUFFER_SIZE, client->message);
+		console_write("%i: %.*s\n", client->message_size, COMMAND_BUFFER_SIZE, client->message);
 	}
 
 	if(client->message_size == -1)

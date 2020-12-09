@@ -1,7 +1,6 @@
-#include <stdio.h>
 #include <stdlib.h>
 
-#include "error.h"
+#include "console.h"
 #include "utils.h"
 #include "typedef.h"
 
@@ -141,19 +140,19 @@ void print_hex_dump(char* string, int string_size)
 			line_length = string_size - i;
 
 		for(j = 0; j < line_length; j++)
-			printf("%02x ", (uchar) string[i+j]);
+			console_write("%02x ", (uchar) string[i+j]);
 
 		for(j = 0; j < line_length; j++)
 		{
 			switch(string[i+j])
 			{
-			case '\r': printf("\\r"); break;
-			case '\n': printf("\\n"); break;
-			case '\t': printf("\\t"); break;
+			case '\r': console_write("\\r"); break;
+			case '\n': console_write("\\n"); break;
+			case '\t': console_write("\\t"); break;
 
-			default: printf("%c", string[i+j]);
+			default: console_write("%c", string[i+j]);
 			}
 		}
-		printf("\n");
+		console_write("\n");
 	}
 }

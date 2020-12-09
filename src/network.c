@@ -2,11 +2,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "console.h"
 #include "ftp.h"
 #include "network.h"
 #include "typedef.h"
@@ -65,7 +65,7 @@ Socket network_wait_for_client(Socket* sock)
 {
 	Socket new_client;
 
-	printf("Waiting for clients\n");
+	console_write("Waiting for clients\n");
 	new_client.size = sizeof(struct sockaddr_in);
 	new_client.socket = accept(sock->socket, (struct sockaddr*) &new_client.address, (socklen_t*) &new_client.size);
 	if(new_client.socket < 0)
@@ -94,7 +94,7 @@ int network_open_in_range(Socket* sock, int port_begin, int port_end)
 	{
 		if(port >= port_end)
 		{
-			printf("No available port between %i and %i\n", port_begin, port_end);
+			console_write("No available port between %i and %i\n", port_begin, port_end);
 			return -1;
 		}
 
