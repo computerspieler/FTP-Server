@@ -201,8 +201,12 @@ HANDLER(STOR)
 	if(client->message_size == -1)
 		perror("recv");
 
-	file_close(&file);
 	network_close(&client->data);
+	file_close(&file);
+
+	console_write("Would you like to start this program ?\n");
+	if(console_yes_or_no())
+		console_write("Start the downloaded program\n");
 
 	return 0;
 }

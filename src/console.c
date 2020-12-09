@@ -28,6 +28,15 @@ int console_write(char* format, ...)
 
 int console_yes_or_no()
 {
-	printf("Yes / No ?");
-	return FALSE;
+	char output_char = 0;
+
+	while(output_char != 'y' && output_char != 'n')
+	{
+		printf("Yes (Y) / No (N) ? ");
+		do
+			output_char = to_lower(getchar());
+		while(output_char < 'a' || output_char > 'z');
+	}
+
+	return output_char == 'y';
 }
