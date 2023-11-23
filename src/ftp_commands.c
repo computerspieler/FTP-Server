@@ -114,12 +114,12 @@ HANDLER(TYPE)
 	return 0;
 }
 
+//TODO
 HANDLER(MODE)
 {
 	switch(client->arguments[0])
 	{
 	case 'S':	// Stream
-		OPTION_UNIMPLEMENTED;
 		break;
 
 	case 'B':	// Block
@@ -134,16 +134,18 @@ HANDLER(MODE)
 		console_write("Unknown mode code: %s\n", client->arguments);
 		ftp_send_response(client, 500, NULL, -1);
 	}
+
+	ftp_send_response(client, 200, NULL, -1);
 	return 0;
 }
 
 //structure-code
+//TODO
 HANDLER(STRU)
 {
 	switch(client->arguments[0])
 	{
 	case 'F':	// File
-		OPTION_UNIMPLEMENTED;
 		break;
 
 	case 'R':	// Record
@@ -158,6 +160,8 @@ HANDLER(STRU)
 		console_write("Unknown structure code: %s\n", client->arguments);
 		ftp_send_response(client, 500, NULL, -1);
 	}
+
+	ftp_send_response(client, 200, NULL, -1);
 	return 0;
 }
 
@@ -254,24 +258,71 @@ HANDLER(STOR)
 	if(packet_size == -1)
 		perror("recv");
 
-	ftp_send_response(client, 250, NULL, -1);
 	network_close(&client->data);
 	file_close(&file);
 
 	if(client->transmission_type != TRANSMISSION_BINARY)
 		return 0;
-	
+
 	console_write("Would you like to start this program ?\n");
 	if(console_yes_or_no()) {
 		console_write("Start the downloaded program\n");
 		//TODO
 	}
 
+	ftp_send_response(client, 250, NULL, -1);
 	return 0;
 }
 
 HANDLER(NOOP)
 {
 	ftp_send_response(client, 200, NULL, -1);
+	return 0;
+}
+
+HANDLER(CWD)
+{
+	int err;
+	char* file_name;
+
+	printf("CWD \"%s\"\n", client->arguments);
+	if(string_length(client->arguments) == 0)
+	{
+		ftp_send_response(client, 501, NULL, -1);
+		return -1;
+	}
+	
+	if(change_current_directory(client->arguments))
+	{
+		ftp_send_response(client, 550, NULL, -1);
+		return 0;
+	}
+
+	ftp_send_response(client, 200, NULL, -1);
+	return 0;
+}
+
+HANDLER(CDUP)
+{
+	int err;
+	char* file_name;
+
+	printf("CDUP\n");
+
+	if(change_current_directory(".."))
+	{
+		ftp_send_response(client, 550, NULL, -1);
+		return 0;
+	}
+
+	ftp_send_response(client, 200, NULL, -1);
+	return 0;
+}
+
+HANDLER(PWD)
+{
+	char buffer[DATA_BUFFER_SIZE];
+	retrieve_cwd(buffer, DATA_BUFFER_SIZE);
+	ftp_send_response(client, 257, buffer, string_length(buffer));
 	return 0;
 }

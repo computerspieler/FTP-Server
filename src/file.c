@@ -1,9 +1,10 @@
-#include <stddef.h>
-#include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "file.h"
 
@@ -106,4 +107,15 @@ int directory_get_entry(Directory* d, DirectoryEntry* entry)
 	}
 
 	return 0;
+}
+
+int change_current_directory(char* path)
+{
+	return chdir(path);
+}
+
+void retrieve_cwd(char * buffer, int size)
+{
+	getcwd(buffer, size-1);
+	buffer[size-1] = 0;
 }

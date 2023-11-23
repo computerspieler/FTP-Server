@@ -55,6 +55,9 @@ HANDLER(RETR);
 HANDLER(STOR);
 HANDLER(NOOP);
 HANDLER(LIST);
+HANDLER(CDUP);
+HANDLER(CWD);
+HANDLER(PWD);
 
 static Command commands[] = {
 	COMMAND(USER),
@@ -68,6 +71,9 @@ static Command commands[] = {
 	COMMAND(STOR),
 	COMMAND(NOOP),
 	COMMAND(LIST),
+	COMMAND(CDUP),
+	COMMAND(CWD),
+	COMMAND(PWD),
 };
 
 #define NB_COMMANDS (int)(sizeof(commands) / sizeof(Command))

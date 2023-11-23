@@ -41,4 +41,7 @@ int directory_close(Directory*);
 
 int directory_get_entry(Directory*, DirectoryEntry*);
 
+int change_current_directory(char*);
+void retrieve_cwd(char *, int);
+
 #endif
