@@ -1,5 +1,9 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <dirent.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/types.h>
 
 #include "file.h"
 
@@ -55,5 +59,51 @@ int file_write(File* file, char* buffer, int buffer_size)
 int file_close(File* file)
 {
 	fclose(file->file);
+	return 0;
+}
+
+int directory_open(Directory* d, char* path)
+{
+	d->directory = opendir(path);
+	if(!d->directory)
+	{
+		perror("opendir");
+		return -1;
+	}
+
+	return 0;
+}
+
+int directory_close(Directory* d)
+{
+	if(d->directory)
+		closedir(d->directory);
+
+	return 0;
+}
+
+int directory_get_entry(Directory* d, DirectoryEntry* entry)
+{
+	struct dirent* ent;
+
+	ent = readdir(d->directory);
+
+	if(!ent)
+	{
+		if(errno == EBADF)
+		{
+			perror("readdir");
+			return -1;
+		}
+
+		if(entry)
+			entry->reached_eof = 1;
+	}
+	else if(entry)
+	{
+		strncpy(entry->name, ent->d_name, 256);
+		entry->reached_eof = 0;
+	}
+
 	return 0;
 }
