@@ -3,6 +3,7 @@
 
 #include "console.h"
 #include "typedef.h"
+#include "utils.h"
 
 int console_init()
 {

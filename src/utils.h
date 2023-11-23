@@ -17,5 +17,6 @@ char* create_substring(char*, int);
 int string_compare(char*, char*, int);
 
 void print_hex_dump(char*, int);
+void clear_memory_area(void*, int);
 
 #endif

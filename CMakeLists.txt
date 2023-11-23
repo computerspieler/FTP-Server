@@ -15,5 +15,5 @@ include_directories(src)
 find_program(GDB "gdb")
 
 add_executable(server ${SRC})
-add_custom_target(run COMMAND ./server)
-add_custom_target(run-gdb COMMAND ${GDB} --args ./server)
+add_custom_target(run COMMAND ./server -p 2121)
+add_custom_target(run-gdb COMMAND ${GDB} --args ./server -p 2121)

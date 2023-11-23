@@ -44,6 +44,7 @@ int ftp_packet_handler(Client* client)
 	console_write("----\n");
 	
 	console_write(commands[i].name);
+	console_write("\n");
 
 	if(command)
 	{
@@ -86,4 +87,17 @@ int ftp_send_response(Client* client, int reply_code, char* string, int string_s
 	free(reply);
 
 	return return_code;
+}
+
+int ftp_open_data_socket(Client *client)
+{
+	if(network_connect(&client->data))
+	{
+		ftp_send_response(client, 425, NULL, -1);
+		perror("data socket");
+		return -1;
+	}
+
+	ftp_send_response(client, 150, NULL, -1);
+	return 0;
 }

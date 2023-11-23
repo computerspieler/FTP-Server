@@ -36,7 +36,6 @@ int file_close(File*);
 
 char* file_extract_name(char*, int);
 
-
 int directory_open(Directory*, char*);
 int directory_close(Directory*);
 

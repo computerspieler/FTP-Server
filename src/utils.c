@@ -82,6 +82,10 @@ void data_copy(char* destination, char* source, int size)
 int string_length(char* text)
 {
 	int i;
+
+    if(!text)
+        return 0;
+
 	for(i = 0; text[i] != 0; i++);
 
 	return i;
@@ -136,11 +140,13 @@ void print_hex_dump(char* string, int string_size)
 
 	for(i = 0; i < string_size; i += 16)
 	{
-		if(i+16 > string_size)
-			line_length = string_size - i;
-
 		for(j = 0; j < line_length; j++)
-			console_write("%02x ", (uchar) string[i+j]);
+		{
+			if(i + j < string_size)
+				console_write("%02x ", (uchar) string[i+j]);
+			else
+				console_write("   ");
+		}
 
 		for(j = 0; j < line_length; j++)
 		{
@@ -154,5 +160,13 @@ void print_hex_dump(char* string, int string_size)
 			}
 		}
 		console_write("\n");
+	}
+}
+
+void clear_memory_area(void* buf, int n) 
+{
+	while(n >= 0) {
+		n --;
+		((char*)buf)[n] = 0;
 	}
 }

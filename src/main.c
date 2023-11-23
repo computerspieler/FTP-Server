@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #include "config.h"
 #include "console.h"
@@ -9,14 +10,19 @@
 #include "typedef.h"
 #include "utils.h"
 
-static int terminate = 0;
+static Socket client;
+static Socket socket_command;
 
 void new_connection(Socket);
+void interrupt_handler(int);
+void stopEverything();
 
 int main(int argc, char* argv[])
 {
-	Socket client;
-	Socket socket_command;
+    int i;
+    int port;
+
+    port = 21;
 
 #ifndef ACCEPT_ALL_USERS
 	Address accepted_address;
@@ -29,20 +35,38 @@ int main(int argc, char* argv[])
 	}
 #endif
 
-	(void) argc;
-	(void) argv;
+    for(i = 1; i < argc; i ++)
+    {
+        if(argv[i][0] != '-')
+            continue;
+
+        switch(argv[i][1])
+        {
+        case 'p':
+            i ++;
+            port = strtol(argv[i], NULL, 10);
+            break;
+
+        default:
+            console_write("Invalid argument: %s\n", argv[i]);
+            return -1;
+        }
+    }
 
 	console_init();
 	file_init();
 	network_init();
+	signal(SIGINT, interrupt_handler);
 
-	if(network_open(&socket_command, 21))
+	if(network_open(&socket_command, port))
 	{
 		perror("command socket");
 		return -2;
 	}
 
-	while(!terminate)
+    console_write("Server listening on port %d\n", port);
+
+	while(1)
 	{
 		network_listen(&socket_command);
 		client = network_wait_for_client(&socket_command);
@@ -59,26 +83,32 @@ int main(int argc, char* argv[])
 #endif
 
 		new_connection(client);
-		terminate = 1;	// For debugging purposes
 	}
 
+	stopEverything();
+
+	return 0;
+}
+
+void stopEverything()
+{
 	console_write("Stop right there, criminal scum!\n");
 	network_close(&client);
 	network_close(&socket_command);
 	console_close();
-
-	return 0;
 }
 
 void new_connection(Socket command_socket)
 {
 	Client client;
 
+	clear_memory_area(&client, sizeof(Client));
+
 	client.command = command_socket;
 	client.message = (char*) xalloc(COMMAND_BUFFER_SIZE, sizeof(char));
 
 	ftp_new_connection_handler(&client);
-	while((client.message_size = network_receive(client.command, client.message, COMMAND_BUFFER_SIZE)) > 0 && !terminate)
+	while((client.message_size = network_receive(client.command, client.message, COMMAND_BUFFER_SIZE)) > 0)
 	{
 		if(ftp_packet_handler(&client) == -1)
 			break;
@@ -87,4 +117,10 @@ void new_connection(Socket command_socket)
 	network_close(&client.data);
 	free(client.message);
 	console_write("The client is disconnected\n");
+}
+
+void interrupt_handler(int dummy)
+{
+	stopEverything();
+	exit(EXIT_SUCCESS);
 }

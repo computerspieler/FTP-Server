@@ -90,7 +90,7 @@ int network_receive(Socket sock, char* buffer, int buffer_size)
 int network_open_in_range(Socket* sock, int port_begin, int port_end)
 {
 	int port;
-	for(port = port_begin; sock->socket == 0; port ++)
+	for(port = port_begin; !sock->socket; port ++)
 	{
 		if(port >= port_end)
 		{
@@ -156,4 +156,9 @@ int network_set_socket_to_nonblocking(Socket* sock)
 	}
 
 	return 0;
+}
+
+int network_is_opened(Socket* sock)
+{
+	return sock->socket > 0;
 }

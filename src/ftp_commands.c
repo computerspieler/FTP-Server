@@ -98,17 +98,19 @@ HANDLER(TYPE)
 	switch(client->arguments[0])
 	{
 	case 'A':   // Ascii
-		OPTION_UNIMPLEMENTED;
+        client->transmission_type = TRANSMISSION_ASCII;
 		break;
 
 	case 'I':   // Binary
-		OPTION_UNIMPLEMENTED;
+        client->transmission_type = TRANSMISSION_BINARY;
 		break;
 
 	default:
 		console_write("Unknown type code: %s\n", client->arguments);
 		ftp_send_response(client, 500, NULL, -1);
 	}
+
+	ftp_send_response(client, 200, NULL, -1);
 	return 0;
 }
 
@@ -134,6 +136,7 @@ HANDLER(MODE)
 	}
 	return 0;
 }
+
 //structure-code
 HANDLER(STRU)
 {
@@ -157,22 +160,81 @@ HANDLER(STRU)
 	}
 	return 0;
 }
+
 //path
 HANDLER(RETR)
 {
 	COMMAND_UNIMPLEMENTED;
 	return 0;
 }
-//path
+
 HANDLER(LIST)
 {
-	COMMAND_UNIMPLEMENTED;
+	int err, remaining_byte_to_send;
+	char buffer[DATA_BUFFER_SIZE];
+	int buffer_index;
+	Directory d;
+	DirectoryEntry dirent;
+
+	printf("List \"%s\"\n", client->arguments);
+	if(string_length(client->arguments) == 0)
+		err = directory_open(&d, ".");
+	else
+		err = directory_open(&d, client->arguments);
+
+	if(err) {
+		ftp_send_response(client, 500, NULL, -1);
+		return -1;
+	}
+
+	dirent.reached_eof = 0;
+	buffer_index = 0;
+
+	if(ftp_open_data_socket(client))
+		return -1;
+
+	while(1)
+	{
+		if(directory_get_entry(&d, &dirent))
+		{
+			//TODO: Changer ça
+			ftp_send_response(client, 500, NULL, -1);
+			return -1;
+		}
+
+		if(dirent.reached_eof)
+			break;
+		
+		remaining_byte_to_send = string_length(dirent.name);
+		dirent.name[remaining_byte_to_send++] = '\r';
+		dirent.name[remaining_byte_to_send++] = '\n';
+
+		while(buffer_index + remaining_byte_to_send >= DATA_BUFFER_SIZE)
+		{
+			data_copy(buffer + buffer_index, dirent.name, DATA_BUFFER_SIZE - buffer_index);
+			remaining_byte_to_send -= DATA_BUFFER_SIZE - buffer_index;
+
+			network_send(client->data, buffer, DATA_BUFFER_SIZE);
+			buffer_index = 0;
+		}
+		data_copy(buffer + buffer_index, dirent.name, remaining_byte_to_send);
+		buffer_index += remaining_byte_to_send;
+	}
+	network_send(client->data, buffer, buffer_index);
+
+	ftp_send_response(client, 250, NULL, -1);
+	network_close(&client->data);
+
+	directory_close(&d);
+
 	return 0;
 }
 
 HANDLER(STOR)
 {
 	File file;
+	int packet_size;
+	char buffer[DATA_BUFFER_SIZE];
 	char* file_name = file_extract_name(client->arguments, client->arguments_size);
 
 	console_write("File to download: %s\n", file_name);
@@ -183,30 +245,27 @@ HANDLER(STOR)
 		return 0;
 	}
 
-	ftp_send_response(client, 150, NULL, -1);
-	if(network_connect(&client->data))
-	{
-		perror("data socket");
+	if(ftp_open_data_socket(client))
 		return -1;
-	}
-	ftp_send_response(client, 125, NULL, -1);
 
-	clear_buffer(client->message, client->message_size);
-	while((client->message_size = network_receive(client->data, client->message, COMMAND_BUFFER_SIZE)) > 0)
-	{
-		file_write(&file, client->message, client->message_size);
-		console_write("%i: %.*s\n", client->message_size, COMMAND_BUFFER_SIZE, client->message);
-	}
+	while((packet_size = network_receive(client->data, buffer, DATA_BUFFER_SIZE)) > 0)
+		file_write(&file, buffer, packet_size);
 
-	if(client->message_size == -1)
+	if(packet_size == -1)
 		perror("recv");
 
+	ftp_send_response(client, 250, NULL, -1);
 	network_close(&client->data);
 	file_close(&file);
 
+	if(client->transmission_type != TRANSMISSION_BINARY)
+		return 0;
+	
 	console_write("Would you like to start this program ?\n");
-	if(console_yes_or_no())
+	if(console_yes_or_no()) {
 		console_write("Start the downloaded program\n");
+		//TODO
+	}
 
 	return 0;
 }

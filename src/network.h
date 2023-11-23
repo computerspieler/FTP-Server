@@ -36,4 +36,6 @@ Socket network_wait_for_client(Socket*);
 
 int network_set_socket_to_nonblocking(Socket*);
 
+int network_is_opened(Socket*);
+
 #endif
