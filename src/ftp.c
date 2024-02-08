@@ -5,6 +5,7 @@
 #include "ftp.h"
 #include "utils.h"
 #include "typedef.h"
+#include "config.h"
 
 int ftp_new_connection_handler(Client* client)
 {
@@ -17,6 +18,10 @@ int ftp_packet_handler(Client* client)
 {
 	int i;
 	Command* command = NULL;
+
+	// Add a null terminator, since the buffer isn't cleared
+	if(client->message_size+1 < COMMAND_BUFFER_SIZE)
+		client->message[client->message_size+1] = 0;
 
 	// It will look for a <CRLF> sequence and turn it into a null character
 	for(i = client->message_size; i > 1; i--)

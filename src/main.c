@@ -102,10 +102,9 @@ void new_connection(Socket command_socket)
 {
 	Client client;
 
-	clear_memory_area(&client, sizeof(Client));
+	clear_buffer(&client, sizeof(Client));
 
 	client.command = command_socket;
-	client.message = (char*) xalloc(COMMAND_BUFFER_SIZE, sizeof(char));
 
 	ftp_new_connection_handler(&client);
 	while((client.message_size = network_receive(client.command, client.message, COMMAND_BUFFER_SIZE)) > 0)
@@ -115,7 +114,6 @@ void new_connection(Socket command_socket)
 	}
 
 	network_close(&client.data);
-	free(client.message);
 	console_write("The client is disconnected\n");
 }
 

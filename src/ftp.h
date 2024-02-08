@@ -1,6 +1,7 @@
 #ifndef _FTP_H_
 #define _FTP_H_
 
+#include "config.h"
 #include "network.h"
 
 typedef struct Client Client;
@@ -20,10 +21,11 @@ struct Client
 	Socket command;
 	Socket data;
 
-	char* message;
 	char* arguments;
 	int arguments_size;
+	
 	int message_size;
+	char message[COMMAND_BUFFER_SIZE];
 
     TrasmissionType transmission_type;
 };

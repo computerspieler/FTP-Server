@@ -1,10 +1,12 @@
 #include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 
 #include "console.h"
 #include "utils.h"
 #include "typedef.h"
 
-char to_lower(char c)
+inline char to_lower(char c)
 {
 	return (c >= 'A' && c <= 'Z') ? c - 'A' + 'a' : c;
 }
@@ -75,8 +77,12 @@ void data_copy(char* destination, char* source, int size)
 	if(!source || !destination)
 		return;
 
+#if 0
 	for(i = 0; i < size; i++)
 		destination[i] = source[i];
+#else
+	memcpy(destination, source, size);
+#endif
 }
 
 int string_length(char* text)
@@ -86,9 +92,12 @@ int string_length(char* text)
     if(!text)
         return 0;
 
+#if 0
 	for(i = 0; text[i] != 0; i++);
-
 	return i;
+#else
+	return strlen(text);
+#endif
 }
 
 void* xalloc(int nb, int size)
@@ -112,24 +121,16 @@ void* xrealloc(void* original_ptr, int nb, int size)
 	return pointer;
 }
 
-int absolute(int i)
+void clear_buffer(void* buffer, int size)
 {
-	return i < 0 ? -i : i;
-}
-
-char* create_substring(char* source, int size)
-{
-	char* output = (char*) xalloc(size + 1, sizeof(char));
-	data_copy(output, source, size);
-
-	return output;
-}
-
-void clear_buffer(char* buffer, int size)
-{
-	int i;
-	for(i = 0; i < size; i++)
-		buffer[i] = 0;
+#if 1
+	while(size >= 0) {
+		size --;
+		((char*)buffer)[size] = 0;
+	}
+#else
+	bzero(buffer, size);
+#endif
 }
 
 void print_hex_dump(char* string, int string_size)
@@ -160,13 +161,5 @@ void print_hex_dump(char* string, int string_size)
 			}
 		}
 		console_write("\n");
-	}
-}
-
-void clear_memory_area(void* buf, int n) 
-{
-	while(n >= 0) {
-		n --;
-		((char*)buf)[n] = 0;
 	}
 }
