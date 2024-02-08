@@ -137,7 +137,7 @@ void print_hex_dump(char* string, int string_size)
 {
 	int i;
 	int j;
-	int line_length = 16;
+	const int line_length = 16;
 
 	for(i = 0; i < string_size; i += 16)
 	{
@@ -151,6 +151,9 @@ void print_hex_dump(char* string, int string_size)
 
 		for(j = 0; j < line_length; j++)
 		{
+			if(i + j >= string_size)
+				break;
+
 			switch(string[i+j])
 			{
 			case '\r': console_write("\\r"); break;

@@ -43,7 +43,7 @@ HANDLER(PORT)
 	Address address;
 
 	// Check if there's enough arguments
-	for(i = 0; argument_str[i] != '\n'; i++)
+	for(i = 0; argument_str[i] != 0; i++)
 	{
 		if(argument_str[i] == ',')
 			nb_comma ++;
