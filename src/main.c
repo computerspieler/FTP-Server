@@ -22,11 +22,11 @@ int main(int argc, char* argv[])
     int i;
     int port;
 
-    port = 21;
+    port = 25001;
 
 #ifndef ACCEPT_ALL_USERS
 	Address accepted_address;
-	accepted_address = network_convert_string_to_address("127.0.0.1");
+	accepted_address = network_convert_string_to_address("0.0.0.0");
 
 	if(errno)
 	{
